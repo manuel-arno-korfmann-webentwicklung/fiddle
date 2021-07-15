@@ -42,6 +42,14 @@ jobs:
 
       - run: rake compile
 
+      # If Fiddle in Ruby's master has the same version of this Fiddle,
+      # "gem install pkg/*.gem" fails.
+      - run: rake version:bump
+        if: >-
+          matrix.ruby == 'debug' ||
+          matrix.ruby == 'mingw' ||
+          matrix.ruby == 'mswin'
+
       - run: rake build
 
       - run: gem install pkg/*.gem
