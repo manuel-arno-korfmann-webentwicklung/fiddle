@@ -27,7 +27,7 @@ typedef union
 VALUE rb_fiddle_type_ensure(VALUE type);
 ffi_type * rb_fiddle_int_to_ffi_type(int type);
 void rb_fiddle_value_to_generic(int type, VALUE *src, fiddle_generic *dst);
-VALUE rb_fiddle_generic_to_value(VALUE rettype, fiddle_generic retval);
+VALUE rb_fiddle_generic_to_value(int type, fiddle_generic retval);
 
 /* Deprecated. Use rb_fiddle_*() version. */
 ffi_type * int_to_ffi_type(int type);
@@ -49,5 +49,7 @@ VALUE generic_to_value(VALUE rettype, fiddle_generic retval);
 # define PTR2NUM(x)   (LL2NUM((LONG_LONG)(x)))
 # define NUM2PTR(x)   ((void*)(NUM2ULL(x)))
 #endif
+
+#define CBOOL2RBBOOL(cbool) ((cbool) ? RUBY_Qtrue : RUBY_Qfalse)
 
 #endif

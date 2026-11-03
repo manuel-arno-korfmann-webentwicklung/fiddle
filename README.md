@@ -18,11 +18,31 @@ gem 'fiddle'
 
 And then execute:
 
-    $ bundle
+```console
+$ bundle
+```
 
 Or install it yourself as:
 
-    $ gem install fiddle
+```console
+$ gem install fiddle
+```
+
+If you want to install libffi automatically, you can use [rubygems-requirements-system](https://rubygems.org/gems/rubygems-requirements-system).
+
+If you use `Gemfile`, you need to add rubygems-requirements-system to plugins:
+
+```ruby
+plugin 'rubygems-requirements-system'
+gem 'fiddle'
+```
+
+If you use `gem`, you need install rubygems-requirements-system before installing Fiddle:
+
+```console
+$ gem install rubygems-requirements-system
+$ gem install fiddle
+```
 
 ## Usage
 
@@ -106,4 +126,4 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/ruby/f
 
 ## License
 
-The gem is available as open source under the terms of the [BSD-2-Clause](https://opensource.org/licenses/BSD-2-Clause).
+The gem is available as open source under the terms of the [Ruby's](COPYING) and/or [BSD-2-Clause](BSDL).

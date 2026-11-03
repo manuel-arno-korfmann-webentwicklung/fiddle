@@ -1,5 +1,230 @@
 # News
 
+## 1.1.8 - 2025-04-25
+
+### Improvements
+
+  * JRuby, TruffleRuby: Improved compatibility with CRuby
+    implementation.
+    * GH-187
+    * Patch by Andrew Kane
+
+### Thanks
+
+  * Andrew Kane
+
+## 1.1.7 - 2025-04-23
+
+### Improvements
+
+  * Added support for `bool` in struct.
+    * [GH-168](https://github.com/ruby/fiddle/issues/168)
+    * [GH-169](https://github.com/ruby/fiddle/issues/169)
+    * Patch by Dmitrii
+
+  * JRuby, TruffleRuby: Improved compatibility with CRuby
+    implementation.
+    * [GH-176](https://github.com/ruby/fiddle/issues/176)
+    * [GH-179](https://github.com/ruby/fiddle/issues/179)
+    * [GH-180](https://github.com/ruby/fiddle/issues/180)
+    * [GH-181](https://github.com/ruby/fiddle/issues/181)
+    * [GH-182](https://github.com/ruby/fiddle/issues/182)
+    * [GH-183](https://github.com/ruby/fiddle/issues/183)
+    * [GH-184](https://github.com/ruby/fiddle/issues/184)
+    * [GH-185](https://github.com/ruby/fiddle/issues/185)
+    * Patch by Andrew Kane
+
+### Thanks
+
+  * Dmitrii
+
+  * Andrew Kane
+
+## 1.1.6 - 2024-12-12
+
+### Improvements
+
+  * JRuby, TruffleRuby: Added `Fiddle::Pointer.read` and
+    `Fiddle::Pointer.write`.
+    * GH-166
+    * Patch by Lars Kanis
+
+  * CRuby: Added support for `INPUT(-lXXX)` `.so`. For example, Arch
+    Linux's `libncurses.so` uses this style.
+
+  * JRuby, TruffleRuby: Added support for accepting numeric value as a
+    `void *` argument.
+    * GH-162
+    * Patch by Dani Smith
+
+### Thanks
+
+  * Lars Kanis
+
+  * Dani Smith
+
+## 1.1.5 - 2024-11-09
+
+### Improvements
+
+  * Removed the "`Fiddle::Function(name:)` must be `String`"
+    limitation that is introduced by 1.1.3.
+    * GH-159
+    * Reported by Mamoru TASAKA
+
+### Thanks
+
+  * Mamoru TASAKA
+
+## 1.1.4 - 2024-10-23
+
+### Improvements
+
+  * JRuby, TruffleRuby: Don't use `mkmf` to generate dummy `Makefile`.
+
+    * GH-153
+    * GH-155
+
+### Fixes
+
+  * JRuby, TruffleRuby: Fixed a bug that shared library load failure
+    isn't caught correctly.
+
+    * GH-156
+    * ruby/reline#766
+
+## 1.1.3 - 2024-10-11
+
+### Improvements
+
+  * Set `changelog_uri` gem metadata.
+    * Patch by Masato Nakamura
+    * GH-138
+
+  * Imported JRuby implementation.
+    * GH-104
+    * GH-147
+
+  * Added support for TruffleRuby.
+    * GH-149
+
+  * Added support for Ractor.
+    * GH-139
+
+### Thanks
+
+  * Masato Nakamura
+
+## 1.1.2 - 2023-11-08
+
+### Improvements
+
+  * Preferred `String#unpack1`.
+
+    Patch by Mau Magnaguagno.
+
+    GH-118
+
+  * Preferred `_Alignof`.
+
+    Patch by Khem Raj.
+
+    GH-120
+
+  * Added `Fiddle::Pointer.read` and `Fiddle::Pointer.write`.
+
+    GH-123
+
+  * Added support for `long` variants.
+
+    Reported by David M. Lary.
+
+    GH-100
+
+  * Added support for `short` variants.
+
+  * Added support for converting one character string to char.
+
+    Reported by kojix2.
+
+    GH-96
+
+  * Added support for write barriers.
+
+    Patch by Jean byroot Boussier.
+
+    GH-127 GH-129
+
+  * Added support for `bool`.
+
+    Reported by Benoit Daloze.
+
+    GH-130
+
+### Thanks
+
+  * Mau Magnaguagno
+
+  * Khem Raj
+
+  * David M. Lary
+
+  * kojix2
+
+  * Jean byroot Boussier
+
+  * Benoit Daloze
+
+## 1.1.1 - 2022-12-08
+
+### Improvements
+
+  * test: Improved glibc detection on alpha and ia64.
+    [[GitHub#105](https://github.com/ruby/fiddle/pull/105)]
+    [[Bug #18645](https://bugs.ruby-lang.org/issues/18645)]
+    [Patch by John Paul Adrian Glaubitz]
+
+  * Added support for linker script on Linux.
+    [[GitHub#107](https://github.com/ruby/fiddle/issues/107)]
+    [Reported by nicholas a. evans]
+
+  * Freed `Fiddle::Closure` immediately.
+    [[GitHub#109](https://github.com/ruby/fiddle/pull/109)]
+
+  * Added `Fiddle::TYPE_UXXX` constants for unsigned types.
+    [[GitHub#111](https://github.com/ruby/fiddle/pull/111)]
+
+  * Added `Fiddle::Types` for type constants. We can still use
+    `Fiddle::TYPE_XXX`.
+    [[GitHub#112](https://github.com/ruby/fiddle/pull/112)]
+
+  * Added `Fiddle::Handle.sym_defined?`.
+    [[GitHub#108](https://github.com/ruby/fiddle/pull/108)]
+
+  * Added `Fiddle::Closure.create` and `Fiddle::Closure.free`.
+    [[GitHub#102](https://github.com/ruby/fiddle/issues/102)]
+    [Reported by Vít Ondruch]
+
+  * Added `--with-libffi-source-dir` build option and removed
+    `--enable-bundled-libffi` build option.
+    [[Bug #18571](https://bugs.ruby-lang.org/issues/18571)]
+
+  * Added `Fiddle::Qtrue`, `Fiddle::Qfalse`, `Fiddle::Qnil` and
+    `Fiddle::Qundef`.
+    [[GitHub#115](https://github.com/ruby/fiddle/pull/115)]
+
+### Fixes
+
+  * Fixed a bug that `Fiddle::PackInfo::PACK_MAP` uses wrong pack
+    template for unsigned types.
+    [[GitHub#109](https://github.com/ruby/fiddle/pull/110)]
+
+### Thanks
+
+  * John Paul Adrian Glaubitz
+
+  * Vít Ondruch
+
 ## 1.1.0 - 2021-10-23
 
 ### Improvements

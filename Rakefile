@@ -5,6 +5,15 @@ task :test do
   ruby("test/run.rb")
 end
 
+release_task = Rake.application["release"]
+release_task.prerequisites.delete("build")
+release_task.prerequisites.delete("release:rubygem_push")
+release_task_comment = release_task.comment
+if release_task_comment
+  release_task.clear_comments
+  release_task.comment = release_task_comment.gsub(/ and build.*$/, "")
+end
+
 namespace :version do
   desc "Bump version"
   task :bump do
@@ -17,8 +26,13 @@ namespace :version do
   end
 end
 
-require 'rake/extensiontask'
-Rake::ExtensionTask.new("fiddle")
-Rake::ExtensionTask.new("-test-/memory_view")
+if RUBY_ENGINE == "ruby"
+  require 'rake/extensiontask'
+  Rake::ExtensionTask.new("fiddle")
+  Rake::ExtensionTask.new("-test-/memory_view")
+  task test: :compile
+else
+  task :compile
+end
 
-task :default => [:compile, :test]
+task default: :test

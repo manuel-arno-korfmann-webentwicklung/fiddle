@@ -1,4 +1,4 @@
-FROM fedora:33
+FROM fedora:latest
 
 RUN \
   dnf install -y \
@@ -12,7 +12,9 @@ RUN \
   dnf clean all
 
 RUN \
-  gem install bundler
+  gem install \
+    test-unit \
+    test-unit-ruby-core
 
 RUN \
   useradd --user-group --create-home user

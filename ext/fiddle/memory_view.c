@@ -64,8 +64,13 @@ fiddle_memview_memsize(const void *ptr)
 }
 
 static const rb_data_type_t fiddle_memview_data_type = {
-    "fiddle/memory_view",
-    {fiddle_memview_mark, fiddle_memview_free, fiddle_memview_memsize,},
+    .wrap_struct_name = "fiddle/memory_view",
+    .function = {
+        .dmark = fiddle_memview_mark,
+        .dfree = fiddle_memview_free,
+        .dsize = fiddle_memview_memsize,
+    },
+    .flags = FIDDLE_DEFAULT_TYPED_DATA_FLAGS,
 };
 
 static VALUE
@@ -92,24 +97,35 @@ rb_fiddle_memview_release(VALUE obj)
 }
 
 static VALUE
-rb_fiddle_memview_s_export(VALUE klass, VALUE target)
+rb_fiddle_memview_s_available_p(VALUE klass, VALUE target)
+{
+    return rb_memory_view_available_p(target) ? Qtrue : Qfalse;
+}
+
+static VALUE
+rb_fiddle_memview_s_export(int argc, VALUE *argv, VALUE klass)
 {
     ID id_new;
     CONST_ID(id_new, "new");
-    VALUE memview = rb_funcall(klass, id_new, 1, target);
+    VALUE memview = rb_funcallv(klass, id_new, argc, argv);
     return rb_ensure(rb_yield, memview, rb_fiddle_memview_release, memview);
 }
 
 static VALUE
-rb_fiddle_memview_initialize(VALUE obj, VALUE target)
+rb_fiddle_memview_initialize(int argc, VALUE *argv, VALUE obj)
 {
+    VALUE target, flags_v;
+    rb_scan_args(argc, argv, "11", &target, &flags_v);
+    int flags = NIL_P(flags_v) ? 0 : NUM2INT(flags_v);
+
     struct memview_data *data;
     TypedData_Get_Struct(obj, struct memview_data, &fiddle_memview_data_type, data);
 
-    if (!rb_memory_view_get(target, &data->view, 0)) {
+    if (!rb_memory_view_get(target, &data->view, flags)) {
         data->view.obj = Qnil;
         rb_raise(rb_eArgError, "Unable to get a memory view from %+"PRIsVALUE, target);
     }
+    RB_OBJ_WRITTEN(obj, Qundef, data->view.obj);
 
     return Qnil;
 }
@@ -302,8 +318,18 @@ Init_fiddle_memory_view(void)
 {
     rb_cMemoryView = rb_define_class_under(mFiddle, "MemoryView", rb_cObject);
     rb_define_alloc_func(rb_cMemoryView, rb_fiddle_memview_s_allocate);
-    rb_define_singleton_method(rb_cMemoryView, "export", rb_fiddle_memview_s_export, 1);
-    rb_define_method(rb_cMemoryView, "initialize", rb_fiddle_memview_initialize, 1);
+    rb_define_const(rb_cMemoryView, "SIMPLE", INT2NUM(RUBY_MEMORY_VIEW_SIMPLE));
+    rb_define_const(rb_cMemoryView, "WRITABLE", INT2NUM(RUBY_MEMORY_VIEW_WRITABLE));
+    rb_define_const(rb_cMemoryView, "FORMAT", INT2NUM(RUBY_MEMORY_VIEW_FORMAT));
+    rb_define_const(rb_cMemoryView, "MULTI_DIMENSIONAL", INT2NUM(RUBY_MEMORY_VIEW_MULTI_DIMENSIONAL));
+    rb_define_const(rb_cMemoryView, "STRIDES", INT2NUM(RUBY_MEMORY_VIEW_STRIDES));
+    rb_define_const(rb_cMemoryView, "ROW_MAJOR", INT2NUM(RUBY_MEMORY_VIEW_ROW_MAJOR));
+    rb_define_const(rb_cMemoryView, "COLUMN_MAJOR", INT2NUM(RUBY_MEMORY_VIEW_COLUMN_MAJOR));
+    rb_define_const(rb_cMemoryView, "ANY_CONTIGUOUS", INT2NUM(RUBY_MEMORY_VIEW_ANY_CONTIGUOUS));
+    rb_define_const(rb_cMemoryView, "INDIRECT", INT2NUM(RUBY_MEMORY_VIEW_INDIRECT));
+    rb_define_singleton_method(rb_cMemoryView, "available?", rb_fiddle_memview_s_available_p, 1);
+    rb_define_singleton_method(rb_cMemoryView, "export", rb_fiddle_memview_s_export, -1);
+    rb_define_method(rb_cMemoryView, "initialize", rb_fiddle_memview_initialize, -1);
     rb_define_method(rb_cMemoryView, "release", rb_fiddle_memview_release, 0);
     rb_define_method(rb_cMemoryView, "obj", rb_fiddle_memview_get_obj, 0);
     rb_define_method(rb_cMemoryView, "byte_size", rb_fiddle_memview_get_byte_size, 0);

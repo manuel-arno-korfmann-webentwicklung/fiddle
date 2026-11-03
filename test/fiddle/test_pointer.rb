@@ -10,6 +10,21 @@ module Fiddle
       Fiddle.dlwrap arg
     end
 
+    def test_can_read_write_memory
+      # Allocate some memory
+      Fiddle::Pointer.malloc(Fiddle::SIZEOF_VOIDP, Fiddle::RUBY_FREE) do |pointer|
+        address = pointer.to_i
+        bytes_to_write = Fiddle::SIZEOF_VOIDP.times.to_a.pack("C*")
+
+        # Write to the memory
+        Fiddle::Pointer.write(address, bytes_to_write)
+
+        # Read the bytes out again
+        bytes = Fiddle::Pointer.read(address, Fiddle::SIZEOF_VOIDP)
+        assert_equal bytes_to_write, bytes
+      end
+    end
+
     def test_cptr_to_int
       null = Fiddle::NULL
       assert_equal(null.to_i, null.to_int)
@@ -66,6 +81,13 @@ module Fiddle
 
       ptr[5] = 0
       assert_equal "hello\0world", ptr.to_str
+
+      ptr.size = 0
+      assert_equal "", ptr.to_str
+      assert_equal "ello\0", (ptr + 1).to_str(5)
+      assert_raise(ArgumentError) do
+        (ptr + 1).to_str
+      end
     end
 
     def test_to_s
@@ -77,6 +99,12 @@ module Fiddle
 
       ptr[5] = 0
       assert_equal 'hello', ptr.to_s
+      assert_equal "hello\0", ptr.to_s(6)
+
+      ptr.size = 0
+      assert_equal "hello", ptr.to_s
+      assert_equal "ello\0", (ptr + 1).to_s(5)
+      assert_equal "ello", (ptr + 1).to_s
     end
 
     def test_minus
@@ -106,9 +134,15 @@ module Fiddle
       ptr = Pointer[str]
       assert_equal str.length, ptr.size
       assert_equal 'hello', ptr[0,5]
+      assert_equal 0, Fiddle::Pointer.to_ptr("abc")[3]
+      assert_equal "world", Fiddle::Pointer.to_ptr("hello\0world")[6,5]
     end
 
     def test_to_ptr_io
+      if ffi_backend?
+        omit("Fiddle::Pointer.to_ptr(IO) isn't supported with FFI backend")
+      end
+
       Pointer.malloc(10, Fiddle::RUBY_FREE) do |buf|
         File.open(__FILE__, 'r') do |f|
           ptr = Pointer.to_ptr f
@@ -134,9 +168,15 @@ module Fiddle
       end
     end
 
-    def test_to_ptr_with_num
+    def test_to_ptr_with_int
       ptr = Pointer.new 0
       assert_equal ptr, Pointer[0]
+    end
+
+    MimicInteger = Struct.new(:to_int)
+    def test_to_ptr_with_to_int
+      ptr = Pointer.new 0
+      assert_equal ptr, Pointer[MimicInteger.new(0)]
     end
 
     def test_equals
@@ -155,7 +195,24 @@ module Fiddle
       assert_nil(ptr <=> 10, '10 should not be comparable')
     end
 
+    def test_ref
+      ptr = Fiddle::Pointer["hello"]
+      ref = ptr.ref
+      assert_equal(0, ref.size)
+      assert_nil(ref.free)
+      assert_equal(ptr, ref.ptr)
+
+      ptr2 = Fiddle::Pointer["world"]
+      ptr.ref[0, Fiddle::SIZEOF_VOIDP] = ptr2.ref
+      assert_equal("world", ptr.to_s)
+      assert_equal(ptr.to_i, ptr2.to_i)
+    end
+
     def test_ref_ptr
+      if ffi_backend?
+        omit("Fiddle.dlwrap([]) isn't supported with FFI backend")
+      end
+
       ary = [0,1,2,4,5]
       addr = Pointer.new(dlwrap(ary))
       assert_equal addr.to_i, addr.ref.ptr.to_i
@@ -164,6 +221,10 @@ module Fiddle
     end
 
     def test_to_value
+      if ffi_backend?
+        omit("Fiddle.dlwrap([]) isn't supported with FFI backend")
+      end
+
       ary = [0,1,2,4,5]
       addr = Pointer.new(dlwrap(ary))
       assert_equal ary, addr.to_value
@@ -220,8 +281,11 @@ module Fiddle
 
     def test_size
       Pointer.malloc(4, Fiddle::RUBY_FREE) do |ptr|
-        assert_equal 4, ptr.size
+        assert_equal(4, ptr.size)
       end
+      assert_equal(0, Pointer.new(0).size)
+      assert_equal(0, Pointer.new(0).ref.size)
+      assert_equal(-1, (Pointer.new(0) + 1).size)
     end
 
     def test_size=
@@ -271,17 +335,12 @@ module Fiddle
       assert_raise(DLError) {nullpo[0] = 1}
     end
 
-    def test_no_memory_leak
-      if respond_to?(:assert_nothing_leaked_memory)
-        n_tries = 100_000
-        assert_nothing_leaked_memory(SIZEOF_VOIDP * (n_tries / 100)) do
-          n_tries.times do
-            Fiddle::Pointer.allocate
-          end
-        end
-      else
-        assert_no_memory_leak(%w[-W0 -rfiddle.so], '', '100_000.times {Fiddle::Pointer.allocate}', rss: true)
-      end
+    def test_ractor_shareable
+      omit("Need Ractor") unless defined?(Ractor)
+      assert_ractor_shareable(Fiddle::NULL)
+      ary = [0, 1, 2, 4, 5]
+      addr = Pointer.new(dlwrap(ary))
+      assert_ractor_shareable(addr)
     end
   end
 end if defined?(Fiddle)
